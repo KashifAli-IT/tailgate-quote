@@ -8,6 +8,7 @@ import sounddevice as sd
 import websockets
 from dotenv import load_dotenv
 
+from backend.app.services.pricing_service import get_price_list
 
 load_dotenv()
 
@@ -62,39 +63,114 @@ async def send_microphone(websocket):
 
 
 async def receive_messages(websocket):
+    pending_tools = []
+
     while True:
         raw_message = await websocket.recv()
         event = json.loads(raw_message)
 
         event_type = event.get("type")
 
-        if event_type == "session.ready":
+        print(f"\n📡 EVENT: {event_type}")
+
+        if event_type == "session.updated":
+            print("✅ Session configuration accepted")
+            print("🔧 Tool configuration was accepted by AssemblyAI")
+            print("SERVER:", json.dumps(event, indent=2))
+
+        elif event_type == "session.ready":
             print("✅ AssemblyAI session ready")
+            print("SERVER:", json.dumps(event, indent=2))
 
         elif event_type == "transcript.user":
-            print("👤 You:", event)
+            print("👤 You:", event.get("text", ""))
 
         elif event_type == "transcript.agent":
-            print("🤖 Agent:", event)
+            print("🤖 Agent:", event.get("text", ""))
+
+        elif event_type == "tool.call":
+            print("🔥 TOOL CALL RECEIVED")
+
+            tool_name = event.get("name")
+            call_id = event.get("call_id")
+            arguments = event.get("arguments", {})
+
+            print("   Name:", tool_name)
+            print("   Call ID:", call_id)
+            print("   Arguments:", arguments)
+
+            if tool_name == "get_price_list":
+                query = arguments.get("query", "")
+
+                result = {
+                    "query": query,
+                    "items": get_price_list(query),
+                }
+
+                pending_tools.append(
+                    {
+                        "call_id": call_id,
+                        "result": result,
+                    }
+                )
+
+                print(
+                    "   Result prepared:",
+                    json.dumps(result, indent=2),
+                )
+
+            else:
+                print(f"⚠️ Unknown tool requested: {tool_name}")
 
         elif event_type == "reply.audio":
-            audio_b64 = event.get("audio")
+            audio_b64 = event.get("data")
 
-            if audio_b64:
-                audio_bytes = base64.b64decode(audio_b64)
+            if not audio_b64:
+                print("⚠️ reply.audio event contains no data")
+                continue
 
-                speaker_buffer.put(audio_bytes)
+            audio_bytes = base64.b64decode(audio_b64)
 
-                print("🔊 Agent audio received")
+            speaker_buffer.put(audio_bytes)
 
         elif event_type == "reply.done":
-            print("✅ Agent response complete\n")
+            status = event.get("status")
+
+            print("✅ Agent response complete")
+            print("   Status:", status)
+
+            if status == "interrupted":
+                print("⚠️ Reply interrupted — discarding pending tools")
+                pending_tools.clear()
+                continue
+
+            for tool in pending_tools:
+                tool_result_message = {
+                    "type": "tool.result",
+                    "call_id": tool["call_id"],
+                    "result": json.dumps(tool["result"]),
+                }
+
+                await websocket.send(
+                    json.dumps(tool_result_message)
+                )
+
+                print(
+                    f"🔧 Tool result sent: {tool['call_id']}"
+                )
+
+            pending_tools.clear()
+
+        elif event_type == "session.error":
+            print("❌ SESSION ERROR")
+            print(json.dumps(event, indent=2))
 
         elif event_type == "error":
-            print("❌ Error:", event)
+            print("❌ ERROR")
+            print(json.dumps(event, indent=2))
 
         else:
-            print("SERVER:", event)
+            print("SERVER:", json.dumps(event, indent=2))
 
 
 async def play_speaker():
@@ -102,33 +178,32 @@ async def play_speaker():
         if status:
             print("Speaker:", status)
 
-        required_bytes = len(outdata)
+        required_bytes = frames * 2  # int16 mono = 2 bytes/sample
 
-        try:
-            audio_data = speaker_buffer.get_nowait()
-        except queue.Empty:
-            outdata[:] = b"\x00" * required_bytes
-            return
+        output = bytearray()
 
-        if len(audio_data) >= required_bytes:
-            outdata[:] = audio_data[:required_bytes]
+        while len(output) < required_bytes:
+            try:
+                chunk = speaker_buffer.get_nowait()
+                output.extend(chunk)
+            except queue.Empty:
+                break
 
-            remaining = audio_data[required_bytes:]
+        if len(output) < required_bytes:
+            output.extend(b"\x00" * (required_bytes - len(output)))
 
-            if remaining:
-                speaker_buffer.put_nowait(remaining)
+        outdata[:] = bytes(output[:required_bytes])
 
-        else:
-            outdata[:len(audio_data)] = audio_data
+        # If we collected more than needed, preserve the remainder
+        extra = output[required_bytes:]
 
-            remaining_bytes = required_bytes - len(audio_data)
-
-            outdata[len(audio_data):] = b"\x00" * remaining_bytes
+        if extra:
+            speaker_buffer.put_nowait(bytes(extra))
 
     with sd.RawOutputStream(
-        samplerate=SAMPLE_RATE,
-        blocksize=BLOCK_SIZE,
-        channels=CHANNELS,
+        samplerate=24_000,
+        blocksize=480,
+        channels=1,
         dtype="int16",
         callback=output_callback,
     ):
@@ -161,10 +236,31 @@ async def main():
                     "type": "session.update",
                     "session": {
                         "system_prompt": (
-                            "You are the Tailgate Quote voice assistant. "
-                            "You help field technicians describe jobs "
-                            "for accurate quotes. Keep responses short "
-                            "and conversational."
+                            "You are Tailgate Quote, a voice-first quoting assistant "
+                            "for field service technicians. "
+
+                            "Your job is to help technicians build accurate material quotes. "
+
+                            "CRITICAL PRICING RULE: "
+                            "Whenever the technician asks for the price, cost, or catalog "
+                            "information for a material or item, you MUST call the "
+                            "get_price_list tool before answering. "
+                            "If the user asks for a material price, NEVER answer from your own knowledge. ALWAYS call get_price_list first."
+                            "NEVER provide a material price from your own knowledge. "
+                            "NEVER say that you do not have access to pricing. "
+                            "NEVER guess or invent a price. "
+
+                            "Use the exact tool result to answer the technician. "
+
+                            "For example: "
+                            "If the technician says 'How much is 3/4 inch copper pipe?', "
+                            "immediately call get_price_list with "
+                            "{\"query\": \"3/4 inch copper pipe\"}. "
+
+                            "After receiving the tool result, briefly state the matching "
+                            "catalog item and its price. "
+
+                            "Keep responses short and conversational."
                         ),
                         "greeting": (
                             "Hi, I'm Tailgate Quote. "
@@ -173,7 +269,34 @@ async def main():
                         "output": {
                             "voice": "ivy",
                         },
-                    },
+                        "tools": [
+                            {
+                                "type": "function",
+                                "name": "get_price_list",
+                                "description": (
+                                    "MANDATORY pricing lookup tool. "
+                                    "Call this tool whenever the technician asks how much "
+                                    "a material or item costs, asks for its price, asks for "
+                                    "a rate, or needs catalog pricing for a quote. "
+                                    "Never answer a pricing question without calling this tool."
+                                ),
+                                "parameters": {
+                                    "type": "object",
+                                    "properties": {
+                                        "query": {
+                                            "type": "string",
+                                            "description": (
+                                                "Material or item to search for, "
+                                                "such as '3/4 inch copper pipe' "
+                                                "or 'shutoff valve'."
+                                            ),
+                                        }
+                                    },
+                                    "required": ["query"],
+                                },
+                            }
+                        ],
+                    }
                 }
             )
         )

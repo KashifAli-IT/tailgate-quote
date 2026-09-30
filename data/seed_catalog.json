@@ -1,0 +1,37 @@
+[
+  {
+    "sku": "CP-075",
+    "name": "3/4\" Type L Copper Pipe",
+    "category": "pipe",
+    "unit": "ft",
+    "unit_price": 8.50
+  },
+  {
+    "sku": "CP-100",
+    "name": "1\" Type L Copper Pipe",
+    "category": "pipe",
+    "unit": "ft",
+    "unit_price": 11.75
+  },
+  {
+    "sku": "SV-075",
+    "name": "3/4\" Shutoff Valve",
+    "category": "valve",
+    "unit": "each",
+    "unit_price": 24.00
+  },
+  {
+    "sku": "SV-100",
+    "name": "1\" Shutoff Valve",
+    "category": "valve",
+    "unit": "each",
+    "unit_price": 31.50
+  },
+  {
+    "sku": "EL-075",
+    "name": "3/4\" Copper Elbow",
+    "category": "fitting",
+    "unit": "each",
+    "unit_price": 4.25
+  }
+]
