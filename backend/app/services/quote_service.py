@@ -40,3 +40,11 @@ def create_draft_quote(
     _quotes[quote_id] = quote
 
     return quote
+
+def get_quote(quote_id: str) -> dict:
+    quote = _quotes.get(quote_id)
+
+    if quote is None:
+        raise ValueError(f"Quote not found: {quote_id}")
+
+    return quote

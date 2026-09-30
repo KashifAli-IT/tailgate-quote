@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from app.services.quote_service import create_draft_quote
+from app.services.quote_service import create_draft_quote, get_quote
 
 
 router = APIRouter(
@@ -35,6 +35,18 @@ async def create_quote(
                 for item in request.items
             ],
         )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        )
+
+@router.get("/{quote_id}")
+async def get_quote_by_id(
+    quote_id: str,
+):
+    try:
+        return get_quote(quote_id)
     except ValueError as exc:
         raise HTTPException(
             status_code=404,
