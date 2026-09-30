@@ -40,4 +40,10 @@ def calculate_line_item(
             f"{quantity:g} x ${unit_price_decimal:.2f} "
             f"= ${subtotal:.2f}"
         ),
+        "price_evidence": {
+            "sku": catalog_item["sku"],
+            "name": catalog_item["name"],
+            "unit": catalog_item["unit"],
+            "unit_price": float(unit_price_decimal),
+        },
     }
