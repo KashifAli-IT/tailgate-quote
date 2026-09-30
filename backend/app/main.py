@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from app.api.routes.catalog import router as catalog_router
 from app.config import settings
+from app.api.routes.quotes import router as quotes_router
 
 
 app = FastAPI(
@@ -29,3 +30,4 @@ async def health():
 
 
 app.include_router(catalog_router)
+app.include_router(quotes_router)
