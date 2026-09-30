@@ -8,12 +8,13 @@ import sounddevice as sd
 import websockets
 from dotenv import load_dotenv
 
-from backend.app.services.pricing_service import get_price_list
+import httpx
 
 load_dotenv()
 
 API_KEY = os.getenv("ASSEMBLYAI_API_KEY")
 WS_URL = "wss://agents.assemblyai.com/v1/ws"
+API_BASE_URL = "http://127.0.0.1:8000"
 
 SAMPLE_RATE = 24_000
 CHANNELS = 1
@@ -71,8 +72,6 @@ async def receive_messages(websocket):
 
         event_type = event.get("type")
 
-        print(f"\n📡 EVENT: {event_type}")
-
         if event_type == "session.updated":
             print("✅ Session configuration accepted")
             print("🔧 Tool configuration was accepted by AssemblyAI")
@@ -102,10 +101,18 @@ async def receive_messages(websocket):
             if tool_name == "get_price_list":
                 query = arguments.get("query", "")
 
-                result = {
-                    "query": query,
-                    "items": get_price_list(query),
-                }
+                print(f"   🌐 Calling FastAPI catalog: {query}")
+
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(
+                        f"{API_BASE_URL}/catalog/search",
+                        params={"query": query},
+                        timeout=5.0,
+                    )
+
+                response.raise_for_status()
+
+                result = response.json()
 
                 pending_tools.append(
                     {
@@ -114,10 +121,7 @@ async def receive_messages(websocket):
                     }
                 )
 
-                print(
-                    "   Result prepared:",
-                    json.dumps(result, indent=2),
-                )
+                print("   ✅ FastAPI result:", result)
 
             else:
                 print(f"⚠️ Unknown tool requested: {tool_name}")

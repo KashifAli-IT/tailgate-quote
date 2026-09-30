@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from app.api.routes.catalog import router as catalog_router
 from app.config import settings
 
 
@@ -25,3 +26,6 @@ async def health():
         "status": "healthy",
         "environment": settings.app_env,
     }
+
+
+app.include_router(catalog_router)

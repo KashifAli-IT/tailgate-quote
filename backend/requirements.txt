@@ -5,3 +5,4 @@ pydantic-settings
 python-dotenv
 websockets>=14
 sounddevice
+httpx
