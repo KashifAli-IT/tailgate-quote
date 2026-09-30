@@ -1,24 +1,36 @@
-_quotes: dict[str, dict] = {}
-_next_quote_number = 1
+import sqlite3
+from pathlib import Path
 
 
-def generate_quote_id() -> str:
-    global _next_quote_number
-
-    quote_id = f"Q-{_next_quote_number:04d}"
-    _next_quote_number += 1
-
-    return quote_id
+DATABASE_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "data"
+    / "quotes.db"
+)
 
 
-def save_quote(
-    quote_id: str,
-    quote: dict,
-) -> None:
-    _quotes[quote_id] = quote
+def get_connection() -> sqlite3.Connection:
+    connection = sqlite3.connect(DATABASE_PATH)
+    connection.row_factory = sqlite3.Row
+    return connection
 
 
-def get_saved_quote(
-    quote_id: str,
-) -> dict | None:
-    return _quotes.get(quote_id)
+def initialize_database() -> None:
+    DATABASE_PATH.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    with get_connection() as connection:
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS quotes (
+                quote_id TEXT PRIMARY KEY,
+                status TEXT NOT NULL,
+                customer_name TEXT NOT NULL,
+                quote_data TEXT NOT NULL
+            )
+            """
+        )
+
+        connection.commit()
