@@ -1,8 +1,9 @@
 from app.services.calculation_service import calculate_line_item
-
-
-_quotes: dict[str, dict] = {}
-_next_quote_number = 1
+from app.storage.quote_store import (
+    generate_quote_id,
+    save_quote,
+    get_saved_quote,
+)
 
 
 def create_draft_quote(
@@ -11,8 +12,7 @@ def create_draft_quote(
 ) -> dict:
     global _next_quote_number
 
-    quote_id = f"Q-{_next_quote_number:04d}"
-    _next_quote_number += 1
+    quote_id = generate_quote_id()
 
     calculated_items = []
 
@@ -50,12 +50,15 @@ def create_draft_quote(
         },
     }
 
-    _quotes[quote_id] = quote
+    save_quote(
+        quote_id,
+        quote,
+    )
 
     return quote
 
 def get_quote(quote_id: str) -> dict:
-    quote = _quotes.get(quote_id)
+    quote = get_saved_quote(quote_id)
 
     if quote is None:
         raise ValueError(f"Quote not found: {quote_id}")
