@@ -36,4 +36,8 @@ def calculate_line_item(
         "quantity": quantity,
         "unit_price": float(unit_price_decimal),
         "subtotal": float(subtotal),
+        "calculation": (
+            f"{quantity:g} x ${unit_price_decimal:.2f} "
+            f"= ${subtotal:.2f}"
+        ),
     }
