@@ -17,6 +17,9 @@ router = APIRouter(
 class QuoteItemRequest(BaseModel):
     sku: str = Field(min_length=1)
     quantity: float = Field(gt=0)
+    source_text: str | None = None
+    quantity_evidence: str | None = None
+    product_evidence: str | None = None
 
 
 class CreateDraftQuoteRequest(BaseModel):
@@ -35,6 +38,9 @@ async def create_quote(
                 {
                     "sku": item.sku,
                     "quantity": item.quantity,
+                    "source_text": item.source_text,
+                    "quantity_evidence": item.quantity_evidence,
+                    "product_evidence": item.product_evidence,
                 }
                 for item in request.items
             ],

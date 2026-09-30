@@ -17,12 +17,18 @@ def create_draft_quote(
     calculated_items = []
 
     for item in items:
-        calculated_items.append(
-            calculate_line_item(
-                sku=item["sku"],
-                quantity=item["quantity"],
-            )
+        calculated_item = calculate_line_item(
+            sku=item["sku"],
+            quantity=item["quantity"],
         )
+
+        calculated_item["evidence"] = {
+            "source_text": item.get("source_text"),
+            "quantity_evidence": item.get("quantity_evidence"),
+            "product_evidence": item.get("product_evidence"),
+        }
+
+        calculated_items.append(calculated_item)
 
     total = sum(
         item["subtotal"]
