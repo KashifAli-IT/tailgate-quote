@@ -48,3 +48,18 @@ def get_quote(quote_id: str) -> dict:
         raise ValueError(f"Quote not found: {quote_id}")
 
     return quote
+
+def approve_quote(quote_id: str) -> dict:
+    quote = _quotes.get(quote_id)
+
+    if quote is None:
+        raise ValueError(f"Quote not found: {quote_id}")
+
+    if quote["status"] != "DRAFT":
+        raise ValueError(
+            f"Quote cannot be approved from status: {quote['status']}"
+        )
+
+    quote["status"] = "APPROVED"
+
+    return quote
