@@ -84,3 +84,24 @@ def approve_quote(quote_id: str) -> dict:
     )
 
     return quote
+
+
+def send_quote(quote_id: str) -> dict:
+    quote = get_saved_quote(quote_id)
+
+    if quote is None:
+        raise ValueError(f"Quote not found: {quote_id}")
+
+    if quote["status"] != "APPROVED":
+        raise ValueError(
+            f"Quote cannot be sent from status: {quote['status']}"
+        )
+
+    quote["status"] = "SENT"
+
+    save_quote(
+        quote_id,
+        quote,
+    )
+
+    return quote
