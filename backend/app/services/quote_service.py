@@ -10,8 +10,6 @@ def create_draft_quote(
     customer_name: str,
     items: list[dict],
 ) -> dict:
-    global _next_quote_number
-
     quote_id = generate_quote_id()
 
     calculated_items = []
@@ -57,6 +55,7 @@ def create_draft_quote(
 
     return quote
 
+
 def get_quote(quote_id: str) -> dict:
     quote = get_saved_quote(quote_id)
 
@@ -65,8 +64,9 @@ def get_quote(quote_id: str) -> dict:
 
     return quote
 
+
 def approve_quote(quote_id: str) -> dict:
-    quote = _quotes.get(quote_id)
+    quote = get_saved_quote(quote_id)
 
     if quote is None:
         raise ValueError(f"Quote not found: {quote_id}")
@@ -77,5 +77,10 @@ def approve_quote(quote_id: str) -> dict:
         )
 
     quote["status"] = "APPROVED"
+
+    save_quote(
+        quote_id,
+        quote,
+    )
 
     return quote
