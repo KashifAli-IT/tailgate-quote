@@ -5,6 +5,7 @@ from app.services.quote_service import (
     approve_quote,
     create_draft_quote,
     get_quote,
+    send_quote,
 )
 
 
@@ -69,6 +70,19 @@ async def approve_quote_by_id(
 ):
     try:
         return approve_quote(quote_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        )
+
+
+@router.post("/{quote_id}/send")
+async def send_quote_by_id(
+    quote_id: str,
+):
+    try:
+        return send_quote(quote_id)
     except ValueError as exc:
         raise HTTPException(
             status_code=404,
