@@ -4,12 +4,18 @@ import "./App.css"
 function App() {
   const [isListening, setIsListening] = useState(false)
   const [backendStatus, setBackendStatus] = useState("Checking...")
-  
+  const [quote, setQuote] = useState<any>(null)
+
   useEffect(() => {
     fetch("http://127.0.0.1:8000/health")
       .then((response) => response.json())
       .then(() => setBackendStatus("Backend Connected"))
       .catch(() => setBackendStatus("Backend Offline"))
+    
+    fetch("http://127.0.0.1:8000/quotes/Q-0001")
+      .then((response) => response.json())
+      .then((data) => setQuote(data))
+      .catch(() => setQuote(null)) 
   }, [])
 
   return (
@@ -68,15 +74,32 @@ function App() {
               <p>Review the generated quote before sending.</p>
             </div>
 
-            <span className="quote-status">DRAFT</span>
+            <span className="quote-status">{quote?.status ?? "DRAFT"}</span>
           </div>
 
           <div className="quote-empty">
-            <h3>No quote created yet</h3>
-            <p>
-              Start a voice session to capture the job requirements and
-              generate a quote.
-            </p>
+            {quote ? (
+              <>
+                <h3>{quote.customer_name}</h3>
+                <p>Quote ID: {quote.quote_id}</p>
+                <p>Status: {quote.status}</p>
+                {quote.items?.map((item: any) => (
+                  <div key={item.sku}>
+                    <p>
+                      {item.sku} — {item.quantity} {item.price_evidence?.unit}
+                    </p>
+                    <p>${item.subtotal.toFixed(2)}</p>
+                  </div>
+                ))}
+
+                <p>Total: ${quote.total.toFixed(2)}</p>
+              </>
+            ) : (
+              <>
+                <h3>No quote created yet</h3>
+                <p>Loading quote...</p>
+              </>
+            )}
           </div>
         </section>
 
@@ -89,7 +112,31 @@ function App() {
           </div>
 
           <div className="evidence-empty">
-            <p className="muted">Evidence will appear here.</p>
+            {quote?.items?.map((item: any) => (
+              <div key={item.sku}>
+                <p>
+                  <strong>Source:</strong> {item.evidence?.source_text}
+                </p>
+
+                <p>
+                  <strong>Quantity:</strong> {item.evidence?.quantity_evidence}
+                </p>
+            
+                <p>
+                  <strong>Product:</strong> {item.evidence?.product_evidence}
+                </p>
+            
+                <p>
+                  <strong>Price:</strong> {item.price_evidence?.sku} — $
+                  {item.price_evidence?.unit_price.toFixed(2)} /{" "}
+                  {item.price_evidence?.unit}
+                </p>
+            
+                <p>
+                  <strong>Calculation:</strong> {item.calculation}
+                </p>
+              </div>
+            ))}
           </div>
         </section>
       </main>
