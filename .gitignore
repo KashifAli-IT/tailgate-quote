@@ -15,10 +15,14 @@ env/
 *.db
 *.sqlite
 *.sqlite3
+*.db-journal
 
 # Node
 node_modules/
+.npm/
 dist/
+build/
+*.log
 
 # IDE
 .vscode/
@@ -39,3 +43,16 @@ htmlcov/
 # Temporary files
 *.tmp
 *.temp
+
+*.swp
+*.swo
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+.eggs/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
