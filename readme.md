@@ -1,6 +1,10 @@
 # Tailgate Quote
 
+[![Architecture diagram of kashifali-it/tailgate-quote](https://gitdiagram.com/kashifali-it/tailgate-quote/diagram.png)](https://gitdiagram.com/kashifali-it/tailgate-quote?utm_source=readme&utm_medium=picture)
+
 ### Voice-first field service quoting for technicians and contractors
+
+[![Architecture diagram](https://gitdiagram.com/diagram-badge.svg)](https://gitdiagram.com/kashifali-it/tailgate-quote?utm_source=readme&utm_medium=badge)
 
 > **Talk through the job. Get the quote. Verify every number.**
 
