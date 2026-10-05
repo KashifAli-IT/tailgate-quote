@@ -1,10 +1,6 @@
 # Tailgate Quote
 
-[![Architecture diagram of kashifali-it/tailgate-quote](https://gitdiagram.com/kashifali-it/tailgate-quote/diagram.png)](https://gitdiagram.com/kashifali-it/tailgate-quote?utm_source=readme&utm_medium=picture)
-
 ### Voice-first field service quoting for technicians and contractors
-
-[![Architecture diagram](https://gitdiagram.com/diagram-badge.svg)](https://gitdiagram.com/kashifali-it/tailgate-quote?utm_source=readme&utm_medium=badge)
 
 > **Talk through the job. Get the quote. Verify every number.**
 
@@ -15,31 +11,6 @@ Instead of typing measurements, materials, and job requirements into a quoting s
 The quote is **never sent automatically**. The technician must review and explicitly confirm it before the system marks it as sent.
 
 A core feature of Tailgate Quote is **Proof of Hearing**: important quote values are connected back to the exact words that produced them, allowing the technician to verify what the agent heard and how the final numbers were produced.
-
----
-
-## Project Status
-
-🚧 **Active development — AssemblyAI Voice Agent Hackathon 2026**
-
-The project is being developed incrementally, with each major capability implemented and documented as a separate stage.
-
-### Current status
-
-* [ ] AssemblyAI voice conversation
-* [ ] Real-time transcript
-* [ ] FastAPI backend
-* [ ] JSON-Schema tool calling
-* [ ] Pricing catalog
-* [ ] Deterministic line-item calculations
-* [ ] Draft quote generation
-* [ ] Proof of Hearing / evidence tracking
-* [ ] Human confirmation workflow
-* [ ] Quote persistence
-* [ ] React/PWA interface
-* [ ] Deployment
-* [ ] Demo recording
-* [ ] Hackathon submission
 
 ---
 
@@ -246,6 +217,7 @@ Quote Sent
                   └──────────────┘      └──────────────┘
 ```
 
+[![Architecture diagram of kashifali-it/tailgate-quote](https://gitdiagram.com/kashifali-it/tailgate-quote/diagram.png)](https://gitdiagram.com/kashifali-it/tailgate-quote?utm_source=readme&utm_medium=picture)
 ---
 
 # Technology Stack
